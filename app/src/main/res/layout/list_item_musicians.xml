@@ -1,6 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
+    <ImageView
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:id="@+id/small_cover"
+        tools:src="@color/material_blue_grey_800" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="David Gilmour"
+            android:id="@+id/name"
+            android:textSize="18sp"
+            android:textColor="@color/colorPrimary"
+            android:gravity="center_horizontal" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_below="@+id/name"
+            android:layout_height="match_parent"
+            android:paddingTop="16dp"
+            android:layout_above="@+id/statistics_layout">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="24dp"
+                android:id="@+id/imageView"
+                android:src="@drawable/ic_tag_outline"
+                android:layout_marginRight="12dp"
+                android:alpha="0.86" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                tools:text="psychedelic, progressive, art rock"
+                android:id="@+id/genres"
+                android:layout_gravity="center_vertical" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_marginRight="12dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/statistics_layout">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="24dp"
+                android:id="@+id/imageView2"
+                android:src="@drawable/music_box_outline"
+                android:layout_marginRight="12dp"
+                android:layout_marginEnd="12dp"
+                android:alpha="0.86" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="6 albums, 80 songs"
+                android:id="@+id/statistics"
+                android:textColor="@color/colorAccent"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
+
+    </RelativeLayout>
 </LinearLayout>
