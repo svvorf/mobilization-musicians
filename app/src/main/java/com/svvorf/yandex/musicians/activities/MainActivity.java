@@ -4,6 +4,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.svvorf.yandex.musicians.R;
@@ -19,7 +20,16 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
     @Bind(R.id.toolbar)
     Toolbar toolbar;
 
+    /*
+    Handset fragment
+     */
     private Fragment mCurrentFragment;
+
+    /*
+    Tablet fragments
+     */
+    private ListFragment mListFragment;
+    private MusicianFragment mMusicianFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,36 +39,50 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
 
         setSupportActionBar(toolbar);
 
-        if (savedInstanceState != null) {
-            String tag = savedInstanceState.getString("fragmentTag");
-            mCurrentFragment = getSupportFragmentManager().getFragment(savedInstanceState, tag);
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
+            if (savedInstanceState != null) {
+                String tag = savedInstanceState.getString("fragmentTag");
+                mCurrentFragment = getSupportFragmentManager().getFragment(savedInstanceState, tag);
+            } else {
+                mCurrentFragment = new ListFragment();
+            }
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).commit();
         } else {
-            mCurrentFragment = new ListFragment();
+            mListFragment = new ListFragment();
+            mMusicianFragment = new MusicianFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.musician_fragment, mMusicianFragment, mMusicianFragment.getClass().getSimpleName()).commit();
+            getSupportFragmentManager().beginTransaction().add(R.id.list_fragment, mListFragment, mListFragment.getClass().getSimpleName()).commit();
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).commit();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        mCurrentFragment = getSupportFragmentManager().findFragmentById(R.id.container);
-        String tag = mCurrentFragment.getClass().getSimpleName();
-        outState.putString("fragmentTag", tag);
-        getSupportFragmentManager().putFragment(outState, mCurrentFragment.getClass().getSimpleName(), mCurrentFragment);
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
+            mCurrentFragment = getSupportFragmentManager().findFragmentById(R.id.container);
+            String tag = mCurrentFragment.getClass().getSimpleName();
+            outState.putString("fragmentTag", tag);
+            getSupportFragmentManager().putFragment(outState, mCurrentFragment.getClass().getSimpleName(), mCurrentFragment);
+        }
     }
 
     @Override
     public void onMusicianSelected(int musicianId) {
-        mCurrentFragment = MusicianFragment.newInstance(musicianId);
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).addToBackStack(null).commit();
+        if (getResources().getBoolean(R.bool.is_tablet)) {
+            mMusicianFragment.setMusician(musicianId);
+        } else {
+            mCurrentFragment = MusicianFragment.newInstance(musicianId);
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).addToBackStack(null).commit();
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                getSupportFragmentManager().popBackStack();
+                if (!getResources().getBoolean(R.bool.is_tablet))
+                    getSupportFragmentManager().popBackStack();
                 break;
         }
         return super.onOptionsItemSelected(item);

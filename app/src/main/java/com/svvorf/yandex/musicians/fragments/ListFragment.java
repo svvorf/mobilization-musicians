@@ -5,12 +5,17 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -23,6 +28,8 @@ import com.svvorf.yandex.musicians.network.RequestManager;
 import com.svvorf.yandex.musicians.utils.Utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -35,13 +42,14 @@ import okhttp3.Response;
 /**
  * A fragment for displaying list of musicians
  */
-public class ListFragment extends Fragment {
+public class ListFragment extends Fragment implements SearchView.OnQueryTextListener {
 
     private static final String MUSICIANS_LIST_INSTANCE_STATE = "musiciansListInstanceState";
     @Bind(R.id.swipe_container)
     SwipeRefreshLayout swipeRefreshLayout;
     @Bind(R.id.musicians_list)
     RecyclerView musiciansList;
+
 
     private Realm mRealm;
 
@@ -52,6 +60,10 @@ public class ListFragment extends Fragment {
     private LinearLayoutManager mMusiciansListLayoutManager;
 
     private OnMusicianSelectedListener mCallback;
+
+    private boolean mIsTablet;
+    private int mSelectedPosition;
+    private SearchView mSearchView;
 
     public ListFragment() {
         // Required empty public constructor
@@ -64,6 +76,7 @@ public class ListFragment extends Fragment {
         mMusicians = mRealm.where(Musician.class).findAllSorted("id");
         mRequestManager = RequestManager.getInstance();
         setHasOptionsMenu(true);
+        mIsTablet = getResources().getBoolean(R.bool.is_tablet);
     }
 
     @Override
@@ -88,17 +101,25 @@ public class ListFragment extends Fragment {
                 }
             });
             loadMusicians();
+
         } else { //use cached data from database
             toggleListVisibility(true);
+            if (mIsTablet) {
+                //load first musician
+                mCallback.onMusicianSelected(mMusicians.get(0).getId());
+            }
+            createAdapter();
         }
 
         mMusiciansListLayoutManager = new LinearLayoutManager(getActivity());
         musiciansList.setLayoutManager(mMusiciansListLayoutManager);
 
-        mListAdapter = new MusiciansAdapter(getActivity(), mMusicians, mCallback);
-        musiciansList.setAdapter(mListAdapter);
         musiciansList.addItemDecoration(new ItemDecorations.DividerItemDecoration(getActivity(), R.drawable.line_divider));
+    }
 
+    private void createAdapter() {
+        mListAdapter = new MusiciansAdapter(getActivity(), mMusicians, mCallback, mSelectedPosition);
+        musiciansList.setAdapter(mListAdapter);
     }
 
     private void setupRefreshLayout() {
@@ -115,7 +136,6 @@ public class ListFragment extends Fragment {
 
         @Override
         public void onFailure(Call call, IOException e) {
-
             swipeRefreshLayout.setRefreshing(false);
         }
 
@@ -130,9 +150,16 @@ public class ListFragment extends Fragment {
                     mRealm.copyToRealmOrUpdate(apiResponse.getMusicians());
                     mRealm.commitTransaction();
 
+                    createAdapter();
+
                     toggleListVisibility(true);
                     mListAdapter.notifyDataSetChanged();
                     swipeRefreshLayout.setRefreshing(false);
+
+                    if (mIsTablet) {
+                        //load first musician
+                        mCallback.onMusicianSelected(mMusicians.get(0).getId());
+                    }
                 }
             });
 
@@ -156,13 +183,16 @@ public class ListFragment extends Fragment {
         //Restoring scrolling position after recreation (orientation change)
         if (savedInstanceState != null) {
             mMusiciansListLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable(MUSICIANS_LIST_INSTANCE_STATE));
+            mSelectedPosition = savedInstanceState.getInt("selectedPosition");
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mMusiciansListLayoutManager != null) outState.putParcelable(MUSICIANS_LIST_INSTANCE_STATE, mMusiciansListLayoutManager.onSaveInstanceState());
+        if (mMusiciansListLayoutManager != null)
+            outState.putParcelable(MUSICIANS_LIST_INSTANCE_STATE, mMusiciansListLayoutManager.onSaveInstanceState());
+        outState.putInt("selectedPosition", mListAdapter.getSelectedPosition());
     }
 
     @Override
@@ -172,24 +202,62 @@ public class ListFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_list, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.search);
+        mSearchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        mSearchView.setOnQueryTextListener(this);
+        mSearchView.setQueryHint(getString(R.string.action_search));
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setHomeButtonEnabled(false);
-        actionBar.setDisplayHomeAsUpEnabled(false);
+        if (!mIsTablet) {
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setHomeButtonEnabled(false);
+            actionBar.setDisplayHomeAsUpEnabled(false);
+            actionBar.setBackgroundDrawable(getResources().getDrawable(R.color.colorPrimary));
+        }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-
-
         mCallback = (OnMusicianSelectedListener) getActivity();
     }
 
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        final List<Musician> filteredModelList = filterMusicians(mMusicians, newText);
+        mListAdapter.animateTo(filteredModelList);
+        musiciansList.scrollToPosition(0);
+        return true;
+    }
+
+    private List<Musician> filterMusicians(List<Musician> models, String query) {
+        query = query.toLowerCase();
+
+        final List<Musician> filteredModelList = new ArrayList<>();
+        for (Musician model : models) {
+            final String text = model.getName().toLowerCase();
+            if (text.contains(query)) {
+                filteredModelList.add(model);
+            }
+        }
+        return filteredModelList;
+    }
+    
     public interface OnMusicianSelectedListener {
-        public void onMusicianSelected(int id);
+        void onMusicianSelected(int id);
     }
 }

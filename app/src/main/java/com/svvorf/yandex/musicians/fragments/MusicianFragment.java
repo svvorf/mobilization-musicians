@@ -6,11 +6,10 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -47,6 +46,10 @@ public class MusicianFragment extends Fragment {
     ImageView cover;
     @Bind(R.id.cover_progress)
     ProgressBar coverProgress;
+    @Bind(R.id.link)
+    TextView link;
+
+    private boolean mIsTablet;
 
 
     public MusicianFragment() {
@@ -65,9 +68,14 @@ public class MusicianFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        int musicianId = getArguments().getInt("id");
+
+        int musicianId = 0;
+        if (getArguments() != null)
+            musicianId = getArguments().getInt("id");
+
         mRealm = Realm.getDefaultInstance();
         mMusician = mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
+        mIsTablet = getResources().getBoolean(R.bool.is_tablet);
     }
 
     @Override
@@ -82,11 +90,18 @@ public class MusicianFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        if (mMusician != null)
+            fillViews();
+    }
+
+    private void fillViews() {
         name.setText(mMusician.getName());
         description.setText(mMusician.getDescription());
         statistics.setText(getResources().getString(R.string.statistics, mMusician.getAlbums(), mMusician.getTracks()));
+        link.setText(mMusician.getLink());
         createGenresChips();
 
+        coverProgress.setVisibility(View.VISIBLE);
         RequestManager.getInstance().getPicasso().load(mMusician.getBigCover()).fit().centerCrop().into(cover, new Callback() {
             @Override
             public void onSuccess() {
@@ -102,6 +117,7 @@ public class MusicianFragment extends Fragment {
 
     private void createGenresChips() {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
+        genresContainer.removeAllViews();
         for (RealmString genreString : mMusician.getGenres()) {
             TextView genre = (TextView) inflater.inflate(R.layout.genre_chip, genresContainer, false);
             genre.setBackgroundResource(R.drawable.chip);
@@ -114,10 +130,13 @@ public class MusicianFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setHomeButtonEnabled(true);
-        actionBar.setDisplayHomeAsUpEnabled(true);
+        if (!mIsTablet) {
+            ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+            actionBar.setDisplayShowTitleEnabled(false);
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setBackgroundDrawable(getResources().getDrawable(android.R.color.transparent));
+        }
     }
 
     @Override
@@ -125,5 +144,11 @@ public class MusicianFragment extends Fragment {
         super.onDestroy();
         mRealm.close();
         RequestManager.getInstance().getPicasso().cancelRequest(cover);
+    }
+
+    public void setMusician(int musicianId) {
+        mMusician = mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
+        if (mMusician != null)
+            fillViews();
     }
 }

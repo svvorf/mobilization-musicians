@@ -1,6 +1,8 @@
 package com.svvorf.yandex.musicians.adapters;
 
 import android.app.Activity;
+import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +17,7 @@ import com.svvorf.yandex.musicians.fragments.ListFragment;
 import com.svvorf.yandex.musicians.models.Musician;
 import com.svvorf.yandex.musicians.network.RequestManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.Bind;
@@ -29,10 +32,16 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
     private final List<Musician> mMusicians;
     private ListFragment.OnMusicianSelectedListener mCallback;
 
-    public MusiciansAdapter(Activity context, List<Musician> musicians, ListFragment.OnMusicianSelectedListener callback) {
+    private int mSelectedPosition;
+    private boolean shouldSelectItems;
+
+    public MusiciansAdapter(Activity context, List<Musician> musicians, ListFragment.OnMusicianSelectedListener callback, int selectedPosition) {
         this.mContext = context;
-        this.mMusicians = musicians;
+        this.mMusicians = new ArrayList<>(musicians);
         mCallback = callback;
+        mSelectedPosition = selectedPosition;
+
+        shouldSelectItems = context.getResources().getBoolean(R.bool.is_tablet);
     }
 
     @Override
@@ -68,11 +77,23 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
 
             }
         });
+
+        if (shouldSelectItems) {
+            if (mSelectedPosition == position) {
+                holder.itemView.setBackgroundResource(R.color.selected);
+            } else {
+                holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+            }
+        }
     }
 
     @Override
     public int getItemCount() {
         return mMusicians.size();
+    }
+
+    public int getSelectedPosition() {
+        return mSelectedPosition;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -96,11 +117,72 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int id = mMusicians.get(getAdapterPosition()).getId();
+                    int position = getAdapterPosition();
+                    int id = mMusicians.get(position).getId();
                     mCallback.onMusicianSelected(id);
+
+                    if (shouldSelectItems) {
+                        notifyItemChanged(mSelectedPosition);
+                        mSelectedPosition = position;
+                        notifyItemChanged(position);
+
+                    }
                 }
             });
         }
 
+    }
+
+
+
+    public Musician removeItem(int position) {
+        final Musician model = mMusicians.remove(position);
+        notifyItemRemoved(position);
+        return model;
+    }
+
+    public void addItem(int position, Musician model) {
+        mMusicians.add(position, model);
+        notifyItemInserted(position);
+    }
+
+    public void moveItem(int fromPosition, int toPosition) {
+        final Musician model = mMusicians.remove(fromPosition);
+        mMusicians.add(toPosition, model);
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    public void animateTo(List<Musician> models) {
+        applyAndAnimateRemovals(models);
+        applyAndAnimateAdditions(models);
+        applyAndAnimateMovedItems(models);
+    }
+
+    private void applyAndAnimateRemovals(List<Musician> newModels) {
+        for (int i = mMusicians.size() - 1; i >= 0; i--) {
+            final Musician model = mMusicians.get(i);
+            if (!newModels.contains(model)) {
+                removeItem(i);
+            }
+        }
+    }
+
+    private void applyAndAnimateAdditions(List<Musician> newModels) {
+        for (int i = 0, count = newModels.size(); i < count; i++) {
+            final Musician model = newModels.get(i);
+            if (!mMusicians.contains(model)) {
+                addItem(i, model);
+            }
+        }
+    }
+
+    private void applyAndAnimateMovedItems(List<Musician> newModels) {
+        for (int toPosition = newModels.size() - 1; toPosition >= 0; toPosition--) {
+            final Musician model = newModels.get(toPosition);
+            final int fromPosition = mMusicians.indexOf(model);
+            if (fromPosition >= 0 && fromPosition != toPosition) {
+                moveItem(fromPosition, toPosition);
+            }
+        }
     }
 }
