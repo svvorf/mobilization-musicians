@@ -6,10 +6,11 @@ android {
 
     defaultConfig {
         applicationId "com.svvorf.yandex.musicians"
-        minSdkVersion 16
+        minSdkVersion 18
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -23,14 +24,30 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
+    testCompile "org.mockito:mockito-core:1.+"
+
+    androidTestCompile('com.android.support.test:runner:0.4') {
+        exclude module: 'support-annotations'
+    }
+    // Set this dependency to use JUnit 4 rules
+    androidTestCompile('com.android.support.test:rules:0.4') {
+        exclude module: 'support-annotations'
+    }
+    // Set this dependency to build and run Espresso tests
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.1') {
+        exclude module: 'support-annotations'
+    }
+    // Set this dependency to build and run UI Automator tests
+    androidTestCompile('com.android.support.test.uiautomator:uiautomator-v18:2.1.2') {
+    }
+
+
     compile 'com.android.support:appcompat-v7:23.2.0'
     compile 'com.android.support:support-v4:23.2.0'
-
     compile 'com.squareup.okhttp3:okhttp:3.2.0'
     compile 'com.android.support:recyclerview-v7:23.2.0'
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.squareup.picasso:picasso:2.5.2'
-    compile 'com.android.support:support-v4:23.2.0'
     compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
     compile 'com.google.code.gson:gson:2.6.2'
 }

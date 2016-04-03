@@ -31,7 +31,9 @@ public class Deserializer implements JsonDeserializer<ApiResponse> {
             Musician musician = new Musician();
             musician.setId(jObject.get("id").getAsInt());
             musician.setName(jObject.get("name").getAsString());
-            musician.setDescription(jObject.get("description").getAsString());
+            String description = jObject.get("description").getAsString();
+            description = description.substring(0, 1).toUpperCase() + description.substring(1); //capitalize
+            musician.setDescription(description);
             JsonElement link = jObject.get("link");
             if (link != null)
                 musician.setLink(link.getAsString());

@@ -1,17 +1,18 @@
 package com.svvorf.yandex.musicians.fragments;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.adapters.MusiciansAdapter;
@@ -42,13 +43,15 @@ public class ListFragment extends Fragment {
     @Bind(R.id.musicians_list)
     RecyclerView musiciansList;
 
-    private Realm realm;
+    private Realm mRealm;
 
-    private RealmResults<Musician> musicians;
+    private RealmResults<Musician> mMusicians;
 
-    private MusiciansAdapter listAdapter;
-    private RequestManager requestManager;
-    private LinearLayoutManager musiciansListLayoutManager;
+    private MusiciansAdapter mListAdapter;
+    private RequestManager mRequestManager;
+    private LinearLayoutManager mMusiciansListLayoutManager;
+
+    private OnMusicianSelectedListener mCallback;
 
     public ListFragment() {
         // Required empty public constructor
@@ -57,9 +60,9 @@ public class ListFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        realm = Realm.getDefaultInstance();
-        musicians = realm.where(Musician.class).findAllSorted("id");
-        requestManager = RequestManager.getInstance();
+        mRealm = Realm.getDefaultInstance();
+        mMusicians = mRealm.where(Musician.class).findAllSorted("id");
+        mRequestManager = RequestManager.getInstance();
         setHasOptionsMenu(true);
     }
 
@@ -77,8 +80,7 @@ public class ListFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //Make request to the API if there is no cache
-        if (musicians.size() == 0 && Utils.isNetworkConnected(getActivity())) {
+        if (mMusicians.size() == 0 && Utils.isNetworkConnected(getActivity())) { //Make request to the API if there is no cache
             swipeRefreshLayout.post(new Runnable() {
                 @Override
                 public void run() {
@@ -90,11 +92,11 @@ public class ListFragment extends Fragment {
             toggleListVisibility(true);
         }
 
-        musiciansListLayoutManager = new LinearLayoutManager(getActivity());
-        musiciansList.setLayoutManager(musiciansListLayoutManager);
+        mMusiciansListLayoutManager = new LinearLayoutManager(getActivity());
+        musiciansList.setLayoutManager(mMusiciansListLayoutManager);
 
-        listAdapter = new MusiciansAdapter(getActivity(), musicians);
-        musiciansList.setAdapter(listAdapter);
+        mListAdapter = new MusiciansAdapter(getActivity(), mMusicians, mCallback);
+        musiciansList.setAdapter(mListAdapter);
         musiciansList.addItemDecoration(new ItemDecorations.DividerItemDecoration(getActivity(), R.drawable.line_divider));
 
     }
@@ -119,17 +121,17 @@ public class ListFragment extends Fragment {
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-            final ApiResponse apiResponse = requestManager.getGson().fromJson(response.body().charStream(), ApiResponse.class);
+            final ApiResponse apiResponse = mRequestManager.getGson().fromJson(response.body().charStream(), ApiResponse.class);
 
             ListFragment.this.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    realm.beginTransaction();
-                    realm.copyToRealmOrUpdate(apiResponse.getMusicians());
-                    realm.commitTransaction();
+                    mRealm.beginTransaction();
+                    mRealm.copyToRealmOrUpdate(apiResponse.getMusicians());
+                    mRealm.commitTransaction();
 
                     toggleListVisibility(true);
-                    listAdapter.notifyDataSetChanged();
+                    mListAdapter.notifyDataSetChanged();
                     swipeRefreshLayout.setRefreshing(false);
                 }
             });
@@ -143,30 +145,51 @@ public class ListFragment extends Fragment {
     }
 
     private void loadMusicians() {
-        requestManager.loadMusicians(loadMusiciansCallback);
+        mRequestManager.loadMusicians(loadMusiciansCallback);
 
     }
 
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
-        Log.d("DbG", "restored");
 
         //Restoring scrolling position after recreation (orientation change)
         if (savedInstanceState != null) {
-            musiciansListLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable(MUSICIANS_LIST_INSTANCE_STATE));
+            mMusiciansListLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable(MUSICIANS_LIST_INSTANCE_STATE));
         }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(MUSICIANS_LIST_INSTANCE_STATE, musiciansListLayoutManager.onSaveInstanceState());
+        if (mMusiciansListLayoutManager != null) outState.putParcelable(MUSICIANS_LIST_INSTANCE_STATE, mMusiciansListLayoutManager.onSaveInstanceState());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        realm.close();
+        mRealm.close();
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(true);
+        actionBar.setHomeButtonEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(false);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+
+        mCallback = (OnMusicianSelectedListener) getActivity();
+    }
+
+    public interface OnMusicianSelectedListener {
+        public void onMusicianSelected(int id);
     }
 }
