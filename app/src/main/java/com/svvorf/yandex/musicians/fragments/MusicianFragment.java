@@ -1,15 +1,22 @@
 package com.svvorf.yandex.musicians.fragments;
 
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -17,6 +24,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Callback;
 import com.svvorf.yandex.musicians.R;
+import com.svvorf.yandex.musicians.misc.AnimationManager;
 import com.svvorf.yandex.musicians.models.Musician;
 import com.svvorf.yandex.musicians.models.RealmString;
 import com.svvorf.yandex.musicians.network.RequestManager;
@@ -33,8 +41,6 @@ public class MusicianFragment extends Fragment {
     private Realm mRealm;
     private Musician mMusician;
 
-    @Bind(R.id.name)
-    TextView name;
     @Bind(R.id.description)
     TextView description;
     @Bind(R.id.statistics)
@@ -42,15 +48,17 @@ public class MusicianFragment extends Fragment {
     @Bind(R.id.genres_container)
     LinearLayout genresContainer;
 
-    @Bind(R.id.big_cover)
-    ImageView cover;
-    @Bind(R.id.cover_progress)
-    ProgressBar coverProgress;
     @Bind(R.id.link)
     TextView link;
 
-    private boolean mIsTablet;
+    @Bind(R.id.musician_name_and_cover)
+    ViewGroup nameAndCoverLayout;
 
+    TextView name;
+    ImageView cover;
+    ProgressBar coverProgress;
+    private CollapsingToolbarLayout collapsingToolbarLayout;
+    private ViewGroup rootView;
 
     public MusicianFragment() {
         // Required empty public constructor
@@ -75,27 +83,44 @@ public class MusicianFragment extends Fragment {
 
         mRealm = Realm.getDefaultInstance();
         mMusician = mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
-        mIsTablet = getResources().getBoolean(R.bool.is_tablet);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_musician, container, false);
-        ButterKnife.bind(this, view);
-        return view;
+        rootView = (ViewGroup) inflater.inflate(R.layout.fragment_musician, container, false);
+        ButterKnife.bind(this, rootView);
+        return rootView;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        ViewGroup viewGroup;
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
+            //if the device is a handset, then we should seek views in the CollapsingToolbarLayout
+            viewGroup = ButterKnife.findById(getActivity(), R.id.collapsing_toolbar);
+            // also removing those views from the fragment where they defined via xml by default
+            nameAndCoverLayout.removeAllViews();
+        } else {
+            //on tablets, the views are in the fragment
+            viewGroup = rootView;
+        }
+
+        cover = ButterKnife.findById(viewGroup, R.id.big_cover);
+        coverProgress = ButterKnife.findById(viewGroup, R.id.cover_progress);
+
         if (mMusician != null)
             fillViews();
     }
 
     private void fillViews() {
-        name.setText(mMusician.getName());
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
+            ((CollapsingToolbarLayout) ButterKnife.findById(getActivity(), R.id.collapsing_toolbar)).setTitle(mMusician.getName());
+        } else {
+            ((TextView) ButterKnife.findById(rootView, R.id.name)).setText(mMusician.getName());
+        }
         description.setText(mMusician.getDescription());
         statistics.setText(getResources().getString(R.string.statistics, mMusician.getAlbums(), mMusician.getTracks()));
         link.setText(mMusician.getLink());
@@ -130,12 +155,12 @@ public class MusicianFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (!mIsTablet) {
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
             ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
             actionBar.setDisplayShowTitleEnabled(false);
             actionBar.setHomeButtonEnabled(true);
             actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setBackgroundDrawable(getResources().getDrawable(android.R.color.transparent));
+
         }
     }
 

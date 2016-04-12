@@ -1,4 +1,4 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -9,8 +9,10 @@
         android:orientation="vertical"
         tools:context="com.svvorf.yandex.musicians.fragments.MusicianFragment">
 
-        <FrameLayout
+        <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
             android:layout_width="match_parent"
+            android:id="@+id/musician_name_and_cover"
             android:layout_height="wrap_content">
 
             <FrameLayout
@@ -82,11 +84,11 @@ In addition to his work with Pink Floyd, Gilmour has produced a variety of artis
             android:id="@+id/link"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="10dp"
             android:autoLink="all"
+            android:paddingBottom="10dp"
             android:paddingEnd="16dp"
             android:paddingStart="16dp"
             tools:text="http://google.com/" />
 
     </LinearLayout>
-</ScrollView>
+</android.support.v4.widget.NestedScrollView>

@@ -8,14 +8,18 @@ import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
 /**
- * Created by ivan on 3/31/16.
+ * The main Application subclass.
  */
 public class MusiciansApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        //Initializing Realm
         RealmConfiguration config = new RealmConfiguration.Builder(this).build();
         Realm.setDefaultConfiguration(config);
+
+
         RequestManager.getInstance().initialize(this);
     }
 }

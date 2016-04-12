@@ -4,5 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <bool name="is_tablet">false</bool>
+    <dimen name="fab_margin">16dp</dimen>
 
 </resources>

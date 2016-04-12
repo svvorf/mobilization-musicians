@@ -1,7 +1,11 @@
 package com.svvorf.yandex.musicians.fragments;
 
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -12,15 +16,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.adapters.MusiciansAdapter;
+import com.svvorf.yandex.musicians.misc.AnimationManager;
 import com.svvorf.yandex.musicians.misc.ItemDecorations;
 import com.svvorf.yandex.musicians.models.ApiResponse;
 import com.svvorf.yandex.musicians.models.Musician;
@@ -221,7 +228,9 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
             actionBar.setDisplayShowTitleEnabled(true);
             actionBar.setHomeButtonEnabled(false);
             actionBar.setDisplayHomeAsUpEnabled(false);
-            actionBar.setBackgroundDrawable(getResources().getDrawable(R.color.colorPrimary));
+           // Toolbar toolbar = ButterKnife.findById(getActivity(), R.id.toolbar);
+
+            //AnimationManager.fadeDrawable(toolbar.getBackground(), AnimationManager.FadeDirection.OPAQUE);
         }
     }
 
@@ -256,7 +265,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         }
         return filteredModelList;
     }
-    
+
     public interface OnMusicianSelectedListener {
         void onMusicianSelected(int id);
     }

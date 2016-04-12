@@ -1,5 +1,9 @@
 package com.svvorf.yandex.musicians.activities;
 
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.support.annotation.Nullable;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -46,12 +50,14 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
             } else {
                 mCurrentFragment = new ListFragment();
             }
+
             getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).commit();
         } else {
             mListFragment = new ListFragment();
             mMusicianFragment = new MusicianFragment();
             getSupportFragmentManager().beginTransaction().add(R.id.musician_fragment, mMusicianFragment, mMusicianFragment.getClass().getSimpleName()).commit();
             getSupportFragmentManager().beginTransaction().add(R.id.list_fragment, mListFragment, mListFragment.getClass().getSimpleName()).commit();
+
         }
     }
 
@@ -72,19 +78,12 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
         if (getResources().getBoolean(R.bool.is_tablet)) {
             mMusicianFragment.setMusician(musicianId);
         } else {
-            mCurrentFragment = MusicianFragment.newInstance(musicianId);
-            getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).addToBackStack(null).commit();
+            Intent musicianIntent = new Intent(this, MusicianActivity.class);
+            musicianIntent.putExtra("id", musicianId);
+            startActivity(musicianIntent);
+
+            overridePendingTransition(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ? R.anim.enter_from_right : R.anim.enter_from_bottom, R.anim.no_anim);
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                if (!getResources().getBoolean(R.bool.is_tablet))
-                    getSupportFragmentManager().popBackStack();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

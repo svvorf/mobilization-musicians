@@ -7,4 +7,6 @@
     <string name="list_fragment_title">Musicians</string>
     <string name="search">Search</string>
     <string name="action_search">Type musician name</string>
+    <string name="title_activity_musician">MusicianActivity</string>
+    <string name="action_settings">Settings</string>
 </resources>

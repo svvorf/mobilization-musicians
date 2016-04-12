@@ -9,7 +9,6 @@
     <android.support.v7.widget.RecyclerView
         android:id="@+id/musicians_list"
         android:layout_width="match_parent"
-        android:paddingTop="?attr/actionBarSize"
         android:layout_height="match_parent"
         android:visibility="invisible"
         tools:visibility="visible" />

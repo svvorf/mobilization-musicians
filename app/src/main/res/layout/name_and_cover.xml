@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <FrameLayout
+        android:background="@color/image_background"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <ImageView
+            android:id="@+id/big_cover"
+            android:layout_height="240dp"
+            android:layout_width="match_parent" />
+
+        <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:id="@+id/cover_progress"
+            android:layout_gravity="center"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content" />
+    </FrameLayout>
+
+    <TextView
+        android:background="#55000000"
+        android:gravity="center_vertical"
+        android:id="@+id/name"
+        android:layout_gravity="bottom"
+        android:layout_height="45dp"
+        android:layout_width="match_parent"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:textAllCaps="true"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        tools:text="David Gilmour" />
+</FrameLayout>
