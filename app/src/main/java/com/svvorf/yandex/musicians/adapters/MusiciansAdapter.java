@@ -35,6 +35,14 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
     private int mSelectedPosition;
     private boolean shouldSelectItems;
 
+    /**
+     * The main constructor.
+     *
+     * @param context          A context.
+     * @param musicians        A list of models to show.
+     * @param callback         A listener implementation for handling item click events.
+     * @param selectedPosition A selected item position. This is used when preserving state on tablets with two-pane layout.
+     */
     public MusiciansAdapter(Activity context, List<Musician> musicians, ListFragment.OnMusicianSelectedListener callback, int selectedPosition) {
         this.mContext = context;
         this.mMusicians = new ArrayList<>(musicians);
@@ -46,7 +54,7 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_item_musicians, null));
+        return new ViewHolder(LayoutInflater.from(mContext).inflate(R.layout.list_item_musicians, parent, false));
     }
 
     @Override
@@ -133,30 +141,31 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
 
     }
 
-
-
-    public Musician removeItem(int position) {
-        final Musician model = mMusicians.remove(position);
-        notifyItemRemoved(position);
-        return model;
-    }
-
-    public void addItem(int position, Musician model) {
-        mMusicians.add(position, model);
-        notifyItemInserted(position);
-    }
-
-    public void moveItem(int fromPosition, int toPosition) {
-        final Musician model = mMusicians.remove(fromPosition);
-        mMusicians.add(toPosition, model);
-        notifyItemMoved(fromPosition, toPosition);
-    }
+    // Methods for animating addings and removals (used when showing search results)
 
     public void animateTo(List<Musician> models) {
         applyAndAnimateRemovals(models);
         applyAndAnimateAdditions(models);
         applyAndAnimateMovedItems(models);
     }
+
+    private Musician removeItem(int position) {
+        final Musician model = mMusicians.remove(position);
+        notifyItemRemoved(position);
+        return model;
+    }
+
+    private void addItem(int position, Musician model) {
+        mMusicians.add(position, model);
+        notifyItemInserted(position);
+    }
+
+    private void moveItem(int fromPosition, int toPosition) {
+        final Musician model = mMusicians.remove(fromPosition);
+        mMusicians.add(toPosition, model);
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
 
     private void applyAndAnimateRemovals(List<Musician> newModels) {
         for (int i = mMusicians.size() - 1; i >= 0; i--) {

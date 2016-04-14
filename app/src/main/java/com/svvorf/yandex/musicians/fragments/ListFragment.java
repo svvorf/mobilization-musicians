@@ -1,11 +1,7 @@
 package com.svvorf.yandex.musicians.fragments;
 
 
-import android.animation.ObjectAnimator;
-import android.animation.PropertyValuesHolder;
 import android.content.Context;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.TransitionDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,18 +12,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
 
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.adapters.MusiciansAdapter;
-import com.svvorf.yandex.musicians.misc.AnimationManager;
 import com.svvorf.yandex.musicians.misc.ItemDecorations;
 import com.svvorf.yandex.musicians.models.ApiResponse;
 import com.svvorf.yandex.musicians.models.Musician;
@@ -47,30 +40,35 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 /**
- * A fragment for displaying list of musicians
+ * A fragment for displaying the list of musicians.
+ * The functionality includes:
+ * - loading from the remote API on the first launch, then caching a response
+ * - updating (fetching fresh response from the API) using swipe to refresh
+ * - searching results
  */
 public class ListFragment extends Fragment implements SearchView.OnQueryTextListener {
 
     private static final String MUSICIANS_LIST_INSTANCE_STATE = "musiciansListInstanceState";
+
     @Bind(R.id.swipe_container)
     SwipeRefreshLayout swipeRefreshLayout;
     @Bind(R.id.musicians_list)
     RecyclerView musiciansList;
-
 
     private Realm mRealm;
 
     private RealmResults<Musician> mMusicians;
 
     private MusiciansAdapter mListAdapter;
-    private RequestManager mRequestManager;
     private LinearLayoutManager mMusiciansListLayoutManager;
 
     private OnMusicianSelectedListener mCallback;
 
     private boolean mIsTablet;
+
     private int mSelectedPosition;
-    private SearchView mSearchView;
+
+    private RequestManager mRequestManager;
 
     public ListFragment() {
         // Required empty public constructor
@@ -79,9 +77,13 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //getting database and stored data
         mRealm = Realm.getDefaultInstance();
         mMusicians = mRealm.where(Musician.class).findAllSorted("id");
+
         mRequestManager = RequestManager.getInstance();
+
         setHasOptionsMenu(true);
         mIsTablet = getResources().getBoolean(R.bool.is_tablet);
     }
@@ -89,7 +91,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_list, null);
+        View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         ButterKnife.bind(this, rootView);
         setupRefreshLayout();
 
@@ -100,22 +102,24 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        if (mMusicians.size() == 0 && Utils.isNetworkConnected(getActivity())) { //Make request to the API if there is no cache
-            swipeRefreshLayout.post(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(true);
-                }
-            });
-            loadMusicians();
+        // if there is no stored musicians in the database (e.g. a first launch),
+        // then we start fetching data from the remote API
+        if (mMusicians.size() == 0) {
+            if (Utils.isNetworkConnected(getActivity())) {
+                // the following is a workaround to make SwipeRefreshLayout show loading animation right away.
+                swipeRefreshLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(true);
+                    }
+                });
+                loadMusicians();
+            } else {
+                //TODO show no internet layout
+            }
 
         } else { //use cached data from database
-            toggleListVisibility(true);
-            if (mIsTablet) {
-                //load first musician
-                mCallback.onMusicianSelected(mMusicians.get(0).getId());
-            }
-            createAdapter();
+            finishLoadingData();
         }
 
         mMusiciansListLayoutManager = new LinearLayoutManager(getActivity());
@@ -144,35 +148,46 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         @Override
         public void onFailure(Call call, IOException e) {
             swipeRefreshLayout.setRefreshing(false);
+
+            //TODO show error layout
         }
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             final ApiResponse apiResponse = mRequestManager.getGson().fromJson(response.body().charStream(), ApiResponse.class);
 
-            ListFragment.this.getActivity().runOnUiThread(new Runnable() {
+            getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    //save the response to the database
                     mRealm.beginTransaction();
                     mRealm.copyToRealmOrUpdate(apiResponse.getMusicians());
                     mRealm.commitTransaction();
 
-                    createAdapter();
-
-                    toggleListVisibility(true);
-                    mListAdapter.notifyDataSetChanged();
                     swipeRefreshLayout.setRefreshing(false);
 
-                    if (mIsTablet) {
-                        //load first musician
-                        mCallback.onMusicianSelected(mMusicians.get(0).getId());
-                    }
+                    finishLoadingData();
                 }
             });
 
 
         }
     };
+
+    /**
+     * Creates adapter with data from the database and shows list.
+     */
+    private void finishLoadingData() {
+        createAdapter();
+
+        toggleListVisibility(true);
+        //mListAdapter.notifyDataSetChanged();
+
+        if (mIsTablet) {
+            //load first musician
+            mCallback.onMusicianSelected(mMusicians.get(0).getId());
+        }
+    }
 
     private void toggleListVisibility(boolean show) {
         musiciansList.setVisibility(show ? View.VISIBLE : View.INVISIBLE);
@@ -213,9 +228,9 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         inflater.inflate(R.menu.menu_list, menu);
 
         MenuItem searchItem = menu.findItem(R.id.search);
-        mSearchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        mSearchView.setOnQueryTextListener(this);
-        mSearchView.setQueryHint(getString(R.string.action_search));
+        SearchView searc = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searc.setOnQueryTextListener(this);
+        searc.setQueryHint(getString(R.string.action_search));
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -225,12 +240,11 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
 
         if (!mIsTablet) {
             ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-            actionBar.setDisplayShowTitleEnabled(true);
-            actionBar.setHomeButtonEnabled(false);
-            actionBar.setDisplayHomeAsUpEnabled(false);
-           // Toolbar toolbar = ButterKnife.findById(getActivity(), R.id.toolbar);
-
-            //AnimationManager.fadeDrawable(toolbar.getBackground(), AnimationManager.FadeDirection.OPAQUE);
+            if (actionBar != null) {
+                actionBar.setDisplayShowTitleEnabled(true);
+                actionBar.setHomeButtonEnabled(false);
+                actionBar.setDisplayHomeAsUpEnabled(false);
+            }
         }
     }
 

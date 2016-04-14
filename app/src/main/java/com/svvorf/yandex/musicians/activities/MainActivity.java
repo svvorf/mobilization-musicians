@@ -19,20 +19,19 @@ import com.svvorf.yandex.musicians.models.Musician;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
+/**
+ * The main activity for holding fragments.
+ * Handsets: only ListFragment is shown, MusicianActivity is being called when a musician is selected.
+ * Tablets: both ListFragment and MusicianFragment are shown with two-pane layout.
+ */
 public class MainActivity extends AppCompatActivity implements ListFragment.OnMusicianSelectedListener {
 
     @Bind(R.id.toolbar)
     Toolbar toolbar;
 
-    /*
-    Handset fragment
-     */
-    private Fragment mCurrentFragment;
-
-    /*
-    Tablet fragments
-     */
     private ListFragment mListFragment;
+
+    // Only on tablets
     private MusicianFragment mMusicianFragment;
 
     @Override
@@ -44,20 +43,16 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
         setSupportActionBar(toolbar);
 
         if (!getResources().getBoolean(R.bool.is_tablet)) {
-            if (savedInstanceState != null) {
-                String tag = savedInstanceState.getString("fragmentTag");
-                mCurrentFragment = getSupportFragmentManager().getFragment(savedInstanceState, tag);
-            } else {
-                mCurrentFragment = new ListFragment();
-            }
+            mListFragment = (savedInstanceState != null)
+                    ? (ListFragment) getSupportFragmentManager().getFragment(savedInstanceState, "savedFragment")
+                    : new ListFragment();
 
-            getSupportFragmentManager().beginTransaction().replace(R.id.container, mCurrentFragment, mCurrentFragment.getClass().getSimpleName()).commit();
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, mListFragment, mListFragment.getClass().getSimpleName()).commit();
         } else {
             mListFragment = new ListFragment();
             mMusicianFragment = new MusicianFragment();
             getSupportFragmentManager().beginTransaction().add(R.id.musician_fragment, mMusicianFragment, mMusicianFragment.getClass().getSimpleName()).commit();
             getSupportFragmentManager().beginTransaction().add(R.id.list_fragment, mListFragment, mListFragment.getClass().getSimpleName()).commit();
-
         }
     }
 
@@ -66,10 +61,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
         super.onSaveInstanceState(outState);
 
         if (!getResources().getBoolean(R.bool.is_tablet)) {
-            mCurrentFragment = getSupportFragmentManager().findFragmentById(R.id.container);
-            String tag = mCurrentFragment.getClass().getSimpleName();
-            outState.putString("fragmentTag", tag);
-            getSupportFragmentManager().putFragment(outState, mCurrentFragment.getClass().getSimpleName(), mCurrentFragment);
+            getSupportFragmentManager().putFragment(outState, "savedFragment", mListFragment);
         }
     }
 

@@ -16,13 +16,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 /**
- * A singleton class managing network operations.
+ * A singleton class for managing network operations.
  */
 public class RequestManager {
     private OkHttpClient client;
     private Picasso picasso;
 
-    private final String MUSICIANS_URL = "http://download.cdn.yandex.net/mobilization-2016/artists.json";
+    private static final String MUSICIANS_URL = "http://download.cdn.yandex.net/mobilization-2016/artists.json";
 
     private Request loadMusiciansRequest;
     private Gson gson;

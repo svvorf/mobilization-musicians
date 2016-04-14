@@ -2,24 +2,27 @@ package com.svvorf.yandex.musicians.activities;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
-import android.view.View;
 
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.fragments.MusicianFragment;
 
+import butterknife.ButterKnife;
+
+/**
+ * The activity is used to hold MusicianFragment and is called when a user selects a musician on handsets.
+ * The activity has a different toolbar layout (collapsing, contains cover ImageView and title)
+ */
 public class MusicianActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_musician);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+
+        setSupportActionBar((Toolbar) ButterKnife.findById(this, R.id.toolbar));
 
         int musicianId = getIntent().getIntExtra("id", 0);
         getSupportFragmentManager().beginTransaction().add(R.id.container, MusicianFragment.newInstance(musicianId), MusicianFragment.class.getSimpleName()).commit();
@@ -28,13 +31,14 @@ public class MusicianActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        commenceTransition();
+        applyTransition();
     }
 
-    private void commenceTransition() {
+    /**
+     * The activity closing animation (slide) direction depends on the device orientation.
+     */
+    private void applyTransition() {
         overridePendingTransition(R.anim.no_anim, getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ? R.anim.exit_to_right : R.anim.exit_to_bottom);
-
-
     }
 
     @Override
@@ -43,7 +47,7 @@ public class MusicianActivity extends AppCompatActivity {
             case android.R.id.home:
                 if (!getResources().getBoolean(R.bool.is_tablet)) {
                     finish();
-                    commenceTransition();
+                    applyTransition();
                 }
                 break;
         }

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 
 /**
- * Created by ivan on 4/1/16.
+ * The class provides useful static methods.
  */
 public class Utils {
 

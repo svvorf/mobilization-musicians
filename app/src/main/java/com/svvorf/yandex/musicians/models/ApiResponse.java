@@ -1,6 +1,5 @@
 package com.svvorf.yandex.musicians.models;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
