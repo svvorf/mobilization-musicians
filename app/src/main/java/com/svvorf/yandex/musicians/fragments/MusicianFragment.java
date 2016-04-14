@@ -1,21 +1,32 @@
 package com.svvorf.yandex.musicians.fragments;
 
 
+import android.annotation.TargetApi;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.graphics.Palette;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.models.Musician;
 import com.svvorf.yandex.musicians.models.RealmString;
@@ -33,6 +44,8 @@ public class MusicianFragment extends Fragment {
     private Realm mRealm;
     private Musician mMusician;
 
+    private CollapsingToolbarLayout mCollapsingToolbarLayout;
+
     @Bind(R.id.description)
     TextView description;
     @Bind(R.id.statistics)
@@ -47,6 +60,7 @@ public class MusicianFragment extends Fragment {
     ImageView cover;
     ProgressBar coverProgress;
     private ViewGroup rootView;
+    private Window window;
 
     public MusicianFragment() {
         // Required empty public constructor
@@ -80,6 +94,14 @@ public class MusicianFragment extends Fragment {
                              Bundle savedInstanceState) {
         rootView = (ViewGroup) inflater.inflate(R.layout.fragment_musician, container, false);
         ButterKnife.bind(this, rootView);
+        mCollapsingToolbarLayout = ButterKnife.findById(getActivity(), R.id.collapsing_toolbar);
+
+        window = getActivity().getWindow();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        }
+
         return rootView;
     }
 
@@ -108,7 +130,7 @@ public class MusicianFragment extends Fragment {
     }
 
     /**
-     * The method fills views with musician info and start loading cover image
+     * The method fills views with musician info and starts loading cover image
      */
     private void fillViews() {
         if (!getResources().getBoolean(R.bool.is_tablet)) {
@@ -127,6 +149,24 @@ public class MusicianFragment extends Fragment {
             @Override
             public void onSuccess() {
                 coverProgress.setVisibility(View.GONE);
+                BitmapDrawable drawable = (BitmapDrawable) cover.getDrawable();
+                if (drawable == null)
+                    return;
+
+                final Bitmap bitmap = drawable.getBitmap();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { //change the app's color tint if API is 21+
+                    Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
+                        @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+                        @Override
+                        public void onGenerated(Palette palette) {
+                            window.setStatusBarColor(palette.getDarkMutedColor(getResources().getColor(R.color.colorPrimaryDark)));
+                            mCollapsingToolbarLayout.setContentScrimColor(palette.getMutedColor(getResources().getColor(R.color.colorPrimary)));
+                        }
+                    });
+                } else {
+                    cover.setImageBitmap(bitmap);
+
+                }
             }
 
             @Override
@@ -182,4 +222,5 @@ public class MusicianFragment extends Fragment {
         if (mMusician != null)
             fillViews();
     }
+
 }

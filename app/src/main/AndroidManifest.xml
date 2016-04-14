@@ -23,7 +23,6 @@
         </activity>
         <activity
             android:name=".activities.MusicianActivity"
-            android:label="@string/title_activity_musician"
             android:theme="@style/AppTheme"></activity>
     </application>
 
