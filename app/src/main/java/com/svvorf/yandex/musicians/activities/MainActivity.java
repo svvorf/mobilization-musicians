@@ -42,17 +42,20 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
 
         setSupportActionBar(toolbar);
 
-        if (!getResources().getBoolean(R.bool.is_tablet)) {
-            mListFragment = (savedInstanceState != null)
-                    ? (ListFragment) getSupportFragmentManager().getFragment(savedInstanceState, "savedFragment")
-                    : new ListFragment();
+        mListFragment = (savedInstanceState != null)
+                ? (ListFragment) getSupportFragmentManager().getFragment(savedInstanceState, "listFragment")
+                : new ListFragment();
 
+        if (!getResources().getBoolean(R.bool.is_tablet)) {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, mListFragment, mListFragment.getClass().getSimpleName()).commit();
         } else {
-            mListFragment = new ListFragment();
-            mMusicianFragment = new MusicianFragment();
-            getSupportFragmentManager().beginTransaction().add(R.id.musician_fragment, mMusicianFragment, mMusicianFragment.getClass().getSimpleName()).commit();
-            getSupportFragmentManager().beginTransaction().add(R.id.list_fragment, mListFragment, mListFragment.getClass().getSimpleName()).commit();
+            mMusicianFragment = (MusicianFragment) getSupportFragmentManager().findFragmentById(R.id.musician_fragment);
+            if (mMusicianFragment == null) {
+                mMusicianFragment = new MusicianFragment();
+                getSupportFragmentManager().beginTransaction().replace(R.id.musician_fragment, mMusicianFragment, MusicianFragment.class.getSimpleName()).commit();
+            }
+
+            getSupportFragmentManager().beginTransaction().replace(R.id.list_fragment, mListFragment, ListFragment.class.getSimpleName()).commit();
         }
     }
 
@@ -60,9 +63,8 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        if (!getResources().getBoolean(R.bool.is_tablet)) {
-            getSupportFragmentManager().putFragment(outState, "savedFragment", mListFragment);
-        }
+        getSupportFragmentManager().putFragment(outState, "listFragment", mListFragment);
+
     }
 
     @Override

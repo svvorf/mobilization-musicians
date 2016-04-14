@@ -41,13 +41,11 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
      * @param context          A context.
      * @param musicians        A list of models to show.
      * @param callback         A listener implementation for handling item click events.
-     * @param selectedPosition A selected item position. This is used when preserving state on tablets with two-pane layout.
      */
-    public MusiciansAdapter(Activity context, List<Musician> musicians, ListFragment.OnMusicianSelectedListener callback, int selectedPosition) {
+    public MusiciansAdapter(Activity context, List<Musician> musicians, ListFragment.OnMusicianSelectedListener callback) {
         this.mContext = context;
         this.mMusicians = new ArrayList<>(musicians);
         mCallback = callback;
-        mSelectedPosition = selectedPosition;
 
         shouldSelectItems = context.getResources().getBoolean(R.bool.is_tablet);
     }
@@ -133,12 +131,19 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
                         notifyItemChanged(mSelectedPosition);
                         mSelectedPosition = position;
                         notifyItemChanged(position);
-
                     }
                 }
             });
         }
+    }
 
+    /**
+     * Used on tablets when restoring state after orientation change
+     * @param position a position of item to select
+     */
+    public void setItemSelected(int position) {
+        mSelectedPosition = position;
+        notifyItemChanged(mSelectedPosition);
     }
 
     // Methods for animating addings and removals (used when showing search results)

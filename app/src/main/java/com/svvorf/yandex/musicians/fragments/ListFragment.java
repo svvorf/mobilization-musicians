@@ -66,8 +66,6 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
 
     private boolean mIsTablet;
 
-    private int mSelectedPosition;
-
     private RequestManager mRequestManager;
 
     public ListFragment() {
@@ -129,7 +127,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
     }
 
     private void createAdapter() {
-        mListAdapter = new MusiciansAdapter(getActivity(), mMusicians, mCallback, mSelectedPosition);
+        mListAdapter = new MusiciansAdapter(getActivity(), mMusicians, mCallback);
         musiciansList.setAdapter(mListAdapter);
     }
 
@@ -181,12 +179,8 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         createAdapter();
 
         toggleListVisibility(true);
-        //mListAdapter.notifyDataSetChanged();
+        mListAdapter.notifyDataSetChanged();
 
-        if (mIsTablet) {
-            //load first musician
-            mCallback.onMusicianSelected(mMusicians.get(0).getId());
-        }
     }
 
     private void toggleListVisibility(boolean show) {
@@ -205,7 +199,8 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         //Restoring scrolling position after recreation (orientation change)
         if (savedInstanceState != null) {
             mMusiciansListLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable(MUSICIANS_LIST_INSTANCE_STATE));
-            mSelectedPosition = savedInstanceState.getInt("selectedPosition");
+            int selectedPosition = savedInstanceState.getInt("selectedPosition");
+            mListAdapter.setItemSelected(selectedPosition);
         }
     }
 

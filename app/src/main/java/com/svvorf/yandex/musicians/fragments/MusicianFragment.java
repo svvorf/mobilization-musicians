@@ -31,8 +31,6 @@ import io.realm.Realm;
 public class MusicianFragment extends Fragment {
 
     private Realm mRealm;
-
-
     private Musician mMusician;
 
     @Bind(R.id.description)
@@ -66,13 +64,15 @@ public class MusicianFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        int musicianId = 0;
-        if (getArguments() != null)
-            musicianId = getArguments().getInt("id");
+        setRetainInstance(true);
 
         mRealm = Realm.getDefaultInstance();
-        mMusician = mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
+
+        int musicianId = 0;
+        if (getArguments() != null) {
+            musicianId = getArguments().getInt("id");
+        }
+        mMusician = (musicianId == 0) ? mRealm.where(Musician.class).findAllSorted("id").first() : mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
     }
 
     @Override
@@ -137,7 +137,7 @@ public class MusicianFragment extends Fragment {
     }
 
     /**
-     * Genres are respresented in chips, the method creates them.
+     * Genres are respresented as chips, the method creates them.
      */
     private void createGenresChips() {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
