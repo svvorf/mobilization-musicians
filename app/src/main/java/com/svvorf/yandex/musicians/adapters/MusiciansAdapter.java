@@ -38,9 +38,9 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
     /**
      * The main constructor.
      *
-     * @param context          A context.
-     * @param musicians        A list of models to show.
-     * @param callback         A listener implementation for handling item click events.
+     * @param context   A context.
+     * @param musicians A list of models to show.
+     * @param callback  A listener implementation for handling item click events.
      */
     public MusiciansAdapter(Activity context, List<Musician> musicians, ListFragment.OnMusicianSelectedListener callback) {
         this.mContext = context;
@@ -80,7 +80,7 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
 
             @Override
             public void onError() {
-
+                holder.coverProgress.setVisibility(View.GONE);
             }
         });
 
@@ -139,6 +139,7 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
 
     /**
      * Used on tablets when restoring state after orientation change
+     *
      * @param position a position of item to select
      */
     public void setItemSelected(int position) {

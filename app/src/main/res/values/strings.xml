@@ -7,6 +7,9 @@
     <string name="list_fragment_title">Musicians</string>
     <string name="search">Search</string>
     <string name="action_search">Type musician name</string>
-    <string name="title_activity_musician">MusicianActivity</string>
     <string name="action_settings">Settings</string>
+    <string name="error_occurred">Error occurred</string>
+    <string name="unknown_error">Sorry, an unknown error occurred.</string>
+    <string name="no_internet">Please check your Internet connection</string>
+    <string name="retry">Retry</string>
 </resources>

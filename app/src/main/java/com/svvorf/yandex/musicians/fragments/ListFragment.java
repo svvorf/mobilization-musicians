@@ -18,6 +18,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.adapters.MusiciansAdapter;
@@ -45,6 +48,7 @@ import okhttp3.Response;
  * - loading from the remote API on the first launch, then caching a response
  * - updating (fetching fresh response from the API) using swipe to refresh
  * - searching results
+ * - providing error messages in cases like the lack of internet connection
  */
 public class ListFragment extends Fragment implements SearchView.OnQueryTextListener {
 
@@ -54,6 +58,14 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
     SwipeRefreshLayout swipeRefreshLayout;
     @Bind(R.id.musicians_list)
     RecyclerView musiciansList;
+
+    @Bind(R.id.error_panel)
+    ViewGroup errorPanel;
+    @Bind(R.id.error_text)
+    TextView errorText;
+    @Bind(R.id.error_image)
+    ImageView errorImage;
+
 
     private Realm mRealm;
 
@@ -91,7 +103,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_list, container, false);
         ButterKnife.bind(this, rootView);
-        setupRefreshLayout();
+        setupNetworkLayouts();
 
         return rootView;
     }
@@ -113,7 +125,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
                 });
                 loadMusicians();
             } else {
-                //TODO show no internet layout
+                showNoInternetMessage();
             }
 
         } else { //use cached data from database
@@ -131,14 +143,36 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         musiciansList.setAdapter(mListAdapter);
     }
 
-    private void setupRefreshLayout() {
+    private void setupNetworkLayouts() {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                loadMusicians();
+                attemptToRefresh();
             }
         });
         swipeRefreshLayout.setColorSchemeResources(R.color.colorAccent);
+
+        errorPanel.findViewById(R.id.retry).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                swipeRefreshLayout.setRefreshing(true);
+                attemptToRefresh();
+            }
+        });
+    }
+
+    private void attemptToRefresh() {
+        errorPanel.setVisibility(View.GONE);
+        if (Utils.isNetworkConnected(getActivity())) {
+            loadMusicians();
+        } else {
+            if (mMusicians.size() > 0) { // we aren't hiding the list if there was something downloaded before
+                Toast.makeText(getActivity(), R.string.no_internet, Toast.LENGTH_SHORT).show();
+            } else {
+                showNoInternetMessage();
+            }
+            swipeRefreshLayout.setRefreshing(false);
+        }
     }
 
     private Callback loadMusiciansCallback = new Callback() {
@@ -147,7 +181,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         public void onFailure(Call call, IOException e) {
             swipeRefreshLayout.setRefreshing(false);
 
-            //TODO show error layout
+            showUnknownErrorMessage();
         }
 
         @Override
@@ -189,7 +223,6 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
 
     private void loadMusicians() {
         mRequestManager.loadMusicians(loadMusiciansCallback);
-
     }
 
     @Override
@@ -199,8 +232,11 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         //Restoring scrolling position after recreation (orientation change)
         if (savedInstanceState != null) {
             mMusiciansListLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable(MUSICIANS_LIST_INSTANCE_STATE));
-            int selectedPosition = savedInstanceState.getInt("selectedPosition");
-            mListAdapter.setItemSelected(selectedPosition);
+
+            if (mListAdapter != null) {
+                int selectedPosition = savedInstanceState.getInt("selectedPosition");
+                mListAdapter.setItemSelected(selectedPosition);
+            }
         }
     }
 
@@ -209,7 +245,8 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         super.onSaveInstanceState(outState);
         if (mMusiciansListLayoutManager != null)
             outState.putParcelable(MUSICIANS_LIST_INSTANCE_STATE, mMusiciansListLayoutManager.onSaveInstanceState());
-        outState.putInt("selectedPosition", mListAdapter.getSelectedPosition());
+        if (mListAdapter != null)
+            outState.putInt("selectedPosition", mListAdapter.getSelectedPosition());
     }
 
     @Override
@@ -260,6 +297,18 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         mListAdapter.animateTo(filteredModelList);
         musiciansList.scrollToPosition(0);
         return true;
+    }
+
+    private void showNoInternetMessage() {
+        errorPanel.setVisibility(View.VISIBLE);
+        errorText.setText(R.string.no_internet);
+        errorImage.setImageResource(R.drawable.ic_not_connected);
+    }
+
+    private void showUnknownErrorMessage() {
+        errorPanel.setVisibility(View.VISIBLE);
+        errorText.setText(R.string.unknown_error);
+        errorImage.setImageResource(R.drawable.ic_unknown_error);
     }
 
     private List<Musician> filterMusicians(List<Musician> models, String query) {

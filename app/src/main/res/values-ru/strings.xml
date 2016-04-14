@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Musicians</string>
+
+    <string name="statistics">%1$d альбомов, %2$d треков</string>
+    <string name="refresh_list">Обновить</string>
+
+    <string name="list_fragment_title">Musicians</string>
+    <string name="search">Поиск</string>
+    <string name="action_search">Введите имя музыканта/группы</string>
+    <string name="action_settings">Настройки</string>
+    <string name="error_occurred">Произошла ошибка</string>
+    <string name="unknown_error">Произошла неизвестная ошибка.</string>
+    <string name="no_internet">Пожалуйста, проверьте соединение с Интернетом</string>
+    <string name="retry">Попробовать снова</string>
+</resources>
