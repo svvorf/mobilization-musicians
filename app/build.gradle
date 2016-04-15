@@ -25,20 +25,14 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:1.+'
-    testCompile 'org.robolectric:robolectric:3.1-SNAPSHOT'
     androidTestCompile('com.android.support.test:runner:0.4') {
         exclude module: 'support-annotations'
     }
-    // Set this dependency to use JUnit 4 rules
     androidTestCompile('com.android.support.test:rules:0.4') {
         exclude module: 'support-annotations'
     }
-    // Set this dependency to build and run Espresso tests
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.1') {
         exclude module: 'support-annotations'
-    }
-    // Set this dependency to build and run UI Automator tests
-    androidTestCompile('com.android.support.test.uiautomator:uiautomator-v18:2.1.2') {
     }
     compile 'com.android.support:appcompat-v7:23.2.0'
     compile 'com.android.support:design:23.2.0'

@@ -19,7 +19,6 @@ public class MusiciansApplication extends Application {
         RealmConfiguration config = new RealmConfiguration.Builder(this).build();
         Realm.setDefaultConfiguration(config);
 
-
         RequestManager.getInstance().initialize(this);
     }
 }

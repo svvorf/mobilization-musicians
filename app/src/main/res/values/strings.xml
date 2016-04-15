@@ -12,4 +12,5 @@
     <string name="unknown_error">Sorry, an unknown error occurred.</string>
     <string name="no_internet">Please check your Internet connection</string>
     <string name="retry">Retry</string>
+    <string name="big_cover_content_description">Big cover</string>
 </resources>

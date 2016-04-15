@@ -28,6 +28,7 @@
                     android:layout_gravity="center" />
                 <ImageView
                     android:id="@+id/big_cover"
+                    android:contentDescription="@string/big_cover_content_description"
                     android:layout_width="match_parent"
                     android:layout_height="@dimen/big_cover_height" />
 
@@ -45,7 +46,8 @@
                 android:textAllCaps="true"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
-                tools:text="David Gilmour" />
+                tools:text="David Gilmour"
+                android:visibility="visible" />
         </FrameLayout>
 
         <HorizontalScrollView
