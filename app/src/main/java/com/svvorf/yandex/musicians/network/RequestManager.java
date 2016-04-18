@@ -24,6 +24,8 @@ public class RequestManager {
 
     private static final String MUSICIANS_URL = "http://download.cdn.yandex.net/mobilization-2016/artists.json";
 
+    private String apiEndpoint = MUSICIANS_URL;
+
     private Request loadMusiciansRequest;
     private Gson gson;
 
@@ -38,6 +40,11 @@ public class RequestManager {
     }
 
     public void initialize(Context context) {
+        initialize(context, MUSICIANS_URL);
+    }
+
+    public void initialize(Context context, String apiEndpoint) {
+        this.apiEndpoint = apiEndpoint;
         client = new OkHttpClient();
         picasso = new Picasso.Builder(context).downloader(new OkHttp3Downloader(client)).build();
 
@@ -60,7 +67,7 @@ public class RequestManager {
     }
 
     private void createRequests() {
-        loadMusiciansRequest = new Request.Builder().url(MUSICIANS_URL).build();
+        loadMusiciansRequest = new Request.Builder().url(apiEndpoint).build();
     }
 
     public Picasso getPicasso() {

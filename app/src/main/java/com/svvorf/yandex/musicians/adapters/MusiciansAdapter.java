@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import com.squareup.picasso.Callback;
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.fragments.ListFragment;
 import com.svvorf.yandex.musicians.models.Musician;
+import com.svvorf.yandex.musicians.models.RealmString;
 import com.svvorf.yandex.musicians.network.RequestManager;
 
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
         this.mContext = context;
         this.mMusicians = new ArrayList<>(musicians);
         mCallback = callback;
-
+        Log.d("dbg", mMusicians.size() + "");
         shouldSelectItems = context.getResources().getBoolean(R.bool.is_tablet);
     }
 
@@ -61,15 +63,9 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
         holder.name.setText(musician.getName());
         holder.statistics.setText(mContext.getResources().getString(R.string.statistics, musician.getAlbums(), musician.getTracks()));
 
-        StringBuilder genresStringBuilder = new StringBuilder();
-        int genresCount = musician.getGenres().size();
-        for (int i = 0; i < genresCount; i++) {
-            genresStringBuilder.append(musician.getGenres().get(i).getValue());
-            if (i != genresCount - 1) {
-                genresStringBuilder.append(", ");
-            }
-        }
-        holder.genres.setText(genresStringBuilder.toString());
+
+        String genresString = getGenresString(musician.getGenres());
+        holder.genres.setText(genresString);
 
         holder.coverProgress.setVisibility(View.VISIBLE);
         RequestManager.getInstance().getPicasso().load(musician.getSmallCover()).into(holder.smallCover, new Callback() {
@@ -92,6 +88,7 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
             }
         }
     }
+
 
     @Override
     public int getItemCount() {
@@ -199,5 +196,23 @@ public class MusiciansAdapter extends RecyclerView.Adapter<MusiciansAdapter.View
                 moveItem(fromPosition, toPosition);
             }
         }
+    }
+
+    /**
+     * Creates string which represents genres separated by comma
+     *
+     * @param genres a list of genres
+     * @return generated string
+     */
+    public static String getGenresString(List<RealmString> genres) {
+        StringBuilder genresStringBuilder = new StringBuilder();
+        int genresCount = genres.size();
+        for (int i = 0; i < genresCount; i++) {
+            genresStringBuilder.append(genres.get(i).getValue());
+            if (i != genresCount - 1) {
+                genresStringBuilder.append(", ");
+            }
+        }
+        return genresStringBuilder.toString();
     }
 }

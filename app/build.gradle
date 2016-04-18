@@ -44,4 +44,12 @@ dependencies {
     compile 'com.jakewharton.picasso:picasso2-okhttp3-downloader:1.0.2'
     compile 'com.google.code.gson:gson:2.6.2'
     compile 'com.android.support:palette-v7:23.2.0'
+
+    androidTestCompile 'com.squareup.okhttp3:mockwebserver:3.2.0'
+    androidTestCompile ('com.android.support.test.espresso:espresso-contrib:2.0') {
+        exclude group: 'com.android.support', module: 'appcompat'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude module: 'recyclerview-v7'
+        exclude module: 'support-annotations'
+    }
 }

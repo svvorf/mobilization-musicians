@@ -26,7 +26,7 @@ public class Deserializer implements JsonDeserializer<ApiResponse> {
 
         ApiResponse apiResponse = new ApiResponse();
         List<Musician> musicians = new ArrayList<>();
-        for (int i = 1; i < jArray.size(); i++) {
+        for (int i = 0; i < jArray.size(); i++) {
             JsonObject jObject = (JsonObject) jArray.get(i);
             Musician musician = new Musician();
             musician.setId(jObject.get("id").getAsInt());

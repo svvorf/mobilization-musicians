@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -44,10 +45,14 @@ public class MusicianActivityTest {
     RealmString testGenre2;
 
     Realm realm;
-    int musicianId; //is used when deleting the musician from the database after test
+    int musicianId; //is used while deleting the musician from the database after test
 
     @Before
     public void initMusician() {
+
+        RealmConfiguration config = new RealmConfiguration.Builder(InstrumentationRegistry.getInstrumentation()
+                .getTargetContext()).name("test.realm").inMemory().build();
+        Realm.setDefaultConfiguration(config);
         realm = Realm.getDefaultInstance();
         realm.beginTransaction();
         testMusician = realm.createObject(Musician.class);
@@ -71,20 +76,7 @@ public class MusicianActivityTest {
 
     @Rule
     public ActivityTestRule<MusicianActivity> mActivityRule =
-            new ActivityTestRule<MusicianActivity>(MusicianActivity.class, true, false) {
-
-                @Override
-                protected void afterActivityFinished() {
-                    Realm realm = Realm.getDefaultInstance();
-                    realm.beginTransaction();
-                    realm.where(Musician.class).equalTo("id", musicianId).findFirst().removeFromRealm();
-                    realm.where(RealmString.class).equalTo("value", "progressive rock").findFirst().removeFromRealm();
-                    realm.where(RealmString.class).equalTo("value", "art rock").findFirst().removeFromRealm();
-                    realm.commitTransaction();
-                    realm.close();
-
-                }
-            };
+            new ActivityTestRule<MusicianActivity>(MusicianActivity.class, true, false);
 
     @Test
     public void test_musicianInformationIsProperlyShown() {

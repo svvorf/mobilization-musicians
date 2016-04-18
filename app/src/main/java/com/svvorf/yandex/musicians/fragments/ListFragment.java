@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -187,6 +188,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             final ApiResponse apiResponse = mRequestManager.getGson().fromJson(response.body().charStream(), ApiResponse.class);
+            Log.d("Dbg", "got response: " + apiResponse.getMusicians().size());
 
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -196,7 +198,12 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
                     mRealm.copyToRealmOrUpdate(apiResponse.getMusicians());
                     mRealm.commitTransaction();
 
-                    swipeRefreshLayout.setRefreshing(false);
+                    swipeRefreshLayout.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    });
 
                     finishLoadingData();
                 }
