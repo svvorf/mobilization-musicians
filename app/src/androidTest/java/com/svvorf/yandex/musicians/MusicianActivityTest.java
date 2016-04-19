@@ -1,5 +1,6 @@
 package com.svvorf.yandex.musicians;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.design.widget.CollapsingToolbarLayout;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.svvorf.yandex.musicians.activities.MusicianActivity;
+import com.svvorf.yandex.musicians.matchers.Matchers;
 import com.svvorf.yandex.musicians.models.Musician;
 import com.svvorf.yandex.musicians.models.RealmString;
 
@@ -74,20 +76,23 @@ public class MusicianActivityTest {
         realm.commitTransaction();
     }
 
+
     @Rule
     public ActivityTestRule<MusicianActivity> mActivityRule =
-            new ActivityTestRule<MusicianActivity>(MusicianActivity.class, true, false);
+            new ActivityTestRule<>(MusicianActivity.class, true, false);
+
 
     @Test
     public void test_musicianInformationIsProperlyShown() {
         Context targetContext = InstrumentationRegistry.getInstrumentation()
                 .getTargetContext();
+
         Intent intent = new Intent(targetContext, MusicianActivity.class);
         intent.putExtra("id", testMusician.getId());
 
         mActivityRule.launchActivity(intent);
 
-        onView(withId(R.id.collapsing_toolbar)).check(matches(withCollapsingToolbarTitle(is(testMusician.getName()))));
+        onView(withId(R.id.collapsing_toolbar)).check(matches(Matchers.withCollapsingToolbarTitle(is(testMusician.getName()))));
         onView(withId(R.id.description)).check(matches(withText(testMusician.getDescription())));
         onView(withId(R.id.statistics)).check(matches(withText(targetContext.getString(R.string.statistics, testMusician.getAlbums(), testMusician.getTracks()))));
         onView(withId(R.id.link)).check(matches(withText(testMusician.getLink())));
@@ -98,23 +103,6 @@ public class MusicianActivityTest {
                 .check(matches(withNthChildsText(is("art rock"), 1)));
     }
 
-    /**
-     * Returns a matcher for CollapsingToolbarLayout title
-     */
-    private Matcher<Object> withCollapsingToolbarTitle(final Matcher<String> textMatcher) {
-        return new BoundedMatcher<Object, CollapsingToolbarLayout>(CollapsingToolbarLayout.class) {
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("with CollapsingToolbar title: ");
-                textMatcher.describeTo(description);
-            }
-
-            @Override
-            protected boolean matchesSafely(CollapsingToolbarLayout toolbarLayout) {
-                return textMatcher.matches(toolbarLayout.getTitle());
-            }
-        };
-    }
 
     /**
      * Returns a matcher for a number of children of a ViewGroup.

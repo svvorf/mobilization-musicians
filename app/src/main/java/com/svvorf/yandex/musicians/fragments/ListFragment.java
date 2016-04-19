@@ -180,15 +180,20 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
 
         @Override
         public void onFailure(Call call, IOException e) {
-            swipeRefreshLayout.setRefreshing(false);
 
-            showUnknownErrorMessage();
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    swipeRefreshLayout.setRefreshing(false);
+
+                    showUnknownErrorMessage();
+                }
+            });
         }
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             final ApiResponse apiResponse = mRequestManager.getGson().fromJson(response.body().charStream(), ApiResponse.class);
-            Log.d("Dbg", "got response: " + apiResponse.getMusicians().size());
 
             getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -206,6 +211,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
                     });
 
                     finishLoadingData();
+
                 }
             });
 
@@ -221,6 +227,10 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
 
         toggleListVisibility(true);
         mListAdapter.notifyDataSetChanged();
+
+        if (mIsTablet) {
+            mCallback.onMusicianSelected(0);
+        }
 
     }
 
@@ -267,9 +277,9 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         inflater.inflate(R.menu.menu_list, menu);
 
         MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searc = (SearchView) MenuItemCompat.getActionView(searchItem);
-        searc.setOnQueryTextListener(this);
-        searc.setQueryHint(getString(R.string.action_search));
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(this);
+        searchView.setQueryHint(getString(R.string.action_search));
         super.onCreateOptionsMenu(menu, inflater);
     }
 

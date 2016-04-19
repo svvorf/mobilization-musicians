@@ -1,11 +1,13 @@
 package com.svvorf.yandex.musicians;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
+import android.support.test.runner.lifecycle.ActivityLifecycleMonitorRegistry;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
@@ -26,6 +28,7 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import butterknife.ButterKnife;
 import io.realm.Realm;
@@ -34,6 +37,7 @@ import io.realm.RealmList;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.typeText;
@@ -41,6 +45,8 @@ import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.contrib.RecyclerViewActions.scrollToPosition;
 import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static android.support.test.runner.lifecycle.Stage.RESUMED;
 
 @RunWith(AndroidJUnit4.class)
 public class MainActivityTest {
@@ -49,9 +55,12 @@ public class MainActivityTest {
     private ArrayList<Musician> musicians = new ArrayList<>();
     private Context targetContext;
 
+    private final int TEST_ITEM_POSITION = 4;
+    private Activity currentActivity;
+
     @Before
     public void initTestMusicians() throws IOException {
-        RealmConfiguration config = new RealmConfiguration.Builder(InstrumentationRegistry.getInstrumentation()
+        RealmConfiguration config = new RealmConfiguration.Builder(getInstrumentation()
                 .getTargetContext()).name("test.realm").inMemory().build();
         Realm.setDefaultConfiguration(config);
 
@@ -59,7 +68,8 @@ public class MainActivityTest {
         for (int i = 1; i <= 10; i++) {
             Musician testMusician = new Musician();
             testMusician.setId(i);
-            testMusician.setName("Musician" + i);
+            testMusician.setName("Musician " + i);
+            testMusician.setDescription("A description for musician " + i);
             testMusician.setSmallCover("http://www.4-concepts.com/gulfspic/wp-content/uploads/2014/02/default_image_01-300x300.png");
             testMusician.setAlbums((int) (Math.random() * 100));
             testMusician.setTracks((int) (Math.random() * 1000));
@@ -74,7 +84,8 @@ public class MainActivityTest {
                     .append(testMusician.getTracks()).append(",\"albums\":")
                     .append(testMusician.getAlbums()).append(",\"cover\":{\"small\":\"")
                     .append(testMusician.getSmallCover()).append("\",\"big\":\"")
-                    .append(testMusician.getSmallCover()).append("\"}, \"link\":\"\", \"description\":\"description\"},");
+                    .append(testMusician.getSmallCover()).append("\"}, \"link\":\"\", \"description\":\"")
+                    .append(testMusician.getDescription()).append("\"},");
         }
         mockResponse = mockResponseStringBuilder.toString().substring(0, mockResponseStringBuilder.length() - 1) + "]";
 
@@ -84,7 +95,7 @@ public class MainActivityTest {
 
         server.start();
 
-        targetContext = InstrumentationRegistry.getInstrumentation()
+        targetContext = getInstrumentation()
                 .getTargetContext();
 
         RequestManager requestManager = RequestManager.getInstance();
@@ -115,26 +126,32 @@ public class MainActivityTest {
 
     @Test
     public void test_showsCorrectSearchResults() {
-        int positionToCheck = 4;
-        inputSearchQuery(positionToCheck);
-        onView(withId(R.id.musicians_list)).check(matches(atPosition(0, musicians.get(positionToCheck))));
+        inputSearchQuery(TEST_ITEM_POSITION);
+        onView(withId(R.id.musicians_list)).check(matches(atPosition(0, musicians.get(TEST_ITEM_POSITION))));
     }
 
 
     @Test
     public void test_listComesBackAfterClosingSearchView() {
-        inputSearchQuery(4);
+        inputSearchQuery(TEST_ITEM_POSITION);
         onView(withContentDescription("Clear query")).perform(click(), click());
         checkAllRecyclerViewItems();
     }
 
+    @Test
+    public void test_itemClickOpensRightMusician() {
+        onView(withId(R.id.musicians_list)).perform(RecyclerViewActions.actionOnItemAtPosition(TEST_ITEM_POSITION, click()));
+        onView(withId(R.id.description)).check(matches(withText(musicians.get(TEST_ITEM_POSITION).getDescription())));
+    }
+
     /**
      * Finds SearchView and inputs "Musician" + number
+     *
      * @param number - the number of a musician
      */
     private void inputSearchQuery(int number) {
         onView(withId(R.id.search)).perform(click());
-        onView(withId(android.support.design.R.id.search_src_text)).perform(typeText("Musician" + (number + 1)));
+        onView(withId(android.support.design.R.id.search_src_text)).perform(typeText("Musician " + (number + 1)));
     }
 
     /**
@@ -174,4 +191,18 @@ public class MainActivityTest {
         };
     }
 
+
+    public Activity getActivityInstance() {
+
+        getInstrumentation().runOnMainSync(new Runnable() {
+            public void run() {
+                Collection resumedActivities = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(RESUMED);
+                if (resumedActivities.iterator().hasNext()) {
+                    currentActivity = (Activity) resumedActivities.iterator().next();
+                }
+            }
+        });
+
+        return currentActivity;
+    }
 }

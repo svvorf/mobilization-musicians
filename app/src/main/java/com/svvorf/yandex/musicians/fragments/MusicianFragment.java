@@ -3,6 +3,7 @@ package com.svvorf.yandex.musicians.fragments;
 
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -85,8 +86,9 @@ public class MusicianFragment extends Fragment {
         int musicianId = 0;
         if (getArguments() != null) {
             musicianId = getArguments().getInt("id");
+            mMusician = mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
         }
-        mMusician = (musicianId == 0) ? mRealm.where(Musician.class).findAllSorted("id").first() : mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
+        //mMusician = (musicianId == 0) ? mRealm.where(Musician.class).findAllSorted("id").first() : mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
     }
 
     @Override
@@ -154,18 +156,16 @@ public class MusicianFragment extends Fragment {
                     return;
 
                 final Bitmap bitmap = drawable.getBitmap();
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) { //change the app's color tint if API is 21+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !getResources().getBoolean(R.bool.is_tablet)) { //change the app's color tint if API is 21+
                     Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
                         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
                         @Override
                         public void onGenerated(Palette palette) {
                             window.setStatusBarColor(palette.getDarkMutedColor(getResources().getColor(R.color.colorPrimaryDark)));
                             mCollapsingToolbarLayout.setContentScrimColor(palette.getMutedColor(getResources().getColor(R.color.colorPrimary)));
+
                         }
                     });
-                } else {
-                    cover.setImageBitmap(bitmap);
-
                 }
             }
 
@@ -218,9 +218,13 @@ public class MusicianFragment extends Fragment {
      * @param musicianId the id of the musician
      */
     public void setMusician(int musicianId) {
-        mMusician = mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
+        findMusicianByIdOrFirst(musicianId);
         if (mMusician != null)
             fillViews();
+    }
+
+    private void findMusicianByIdOrFirst(int musicianId) {
+        mMusician = (musicianId == 0) ? mRealm.where(Musician.class).findAllSorted("id").first() : mRealm.where(Musician.class).equalTo("id", musicianId).findFirst();
     }
 
 }

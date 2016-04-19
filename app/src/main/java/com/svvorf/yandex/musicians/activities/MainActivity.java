@@ -49,9 +49,10 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
         if (!getResources().getBoolean(R.bool.is_tablet)) {
             getSupportFragmentManager().beginTransaction().replace(R.id.container, mListFragment, mListFragment.getClass().getSimpleName()).commit();
         } else {
+            //MusicianFragment is set to retain its instance
             mMusicianFragment = (MusicianFragment) getSupportFragmentManager().findFragmentById(R.id.musician_fragment);
             if (mMusicianFragment == null) {
-                mMusicianFragment = new MusicianFragment();
+                mMusicianFragment = MusicianFragment.newInstance(0);
                 getSupportFragmentManager().beginTransaction().replace(R.id.musician_fragment, mMusicianFragment, MusicianFragment.class.getSimpleName()).commit();
             }
 
