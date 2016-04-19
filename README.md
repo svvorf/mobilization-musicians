@@ -3,8 +3,8 @@ Test task application for entering Yandex Mobile Development School 2016.
 
 ![alt text](https://raw.githubusercontent.com/svvorf/mobilization-musicians/master/publish/showcase.png "Musicians")
 
-#### The minimum required functionality:
-* Displaying a list of musicians fetched from url provided in the test task
+#### The app provides minimum required functionality:
+* Displaying a list of musicians fetched from URL provided in the test task description
 * Showing detailed information about each musician
 
 ![alt text](https://raw.githubusercontent.com/svvorf/mobilization-musicians/master/publish/screens.png "Screenshots")
@@ -20,5 +20,10 @@ With Picasso library images are also being cached and not re-downloaded each tim
 There is search available in the Toolbar.
 ##### Animations
 Animations and transitions is used in the phone layout to smooth opening activities
+
+#### Also
 ##### Tests
-A couple of UI tests written with the use of Espresso to test basic functionality of the fragments (only for phones)
+A couple of UI tests have written with the use of Espresso to test basic functionality of the fragments (only for phones)
+##### Comments
+I've provided most of the classes and some of the methods in the code with comments.
+
