@@ -2,6 +2,7 @@ package com.svvorf.yandex.musicians.fragments;
 
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -80,6 +81,8 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
     private boolean mIsTablet;
 
     private RequestManager mRequestManager;
+    private SearchView searchView;
+    private boolean searchOpened;
 
     public ListFragment() {
         // Required empty public constructor
@@ -181,41 +184,43 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         @Override
         public void onFailure(Call call, IOException e) {
 
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(false);
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
 
-                    showUnknownErrorMessage();
-                }
-            });
+                        showUnknownErrorMessage();
+                    }
+                });
+            }
         }
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
             final ApiResponse apiResponse = mRequestManager.getGson().fromJson(response.body().charStream(), ApiResponse.class);
 
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    //save the response to the database
-                    mRealm.beginTransaction();
-                    mRealm.copyToRealmOrUpdate(apiResponse.getMusicians());
-                    mRealm.commitTransaction();
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //save the response to the database
+                        mRealm.beginTransaction();
+                        mRealm.copyToRealmOrUpdate(apiResponse.getMusicians());
+                        mRealm.commitTransaction();
 
-                    swipeRefreshLayout.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
-                    });
+                        swipeRefreshLayout.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        });
 
-                    finishLoadingData();
+                        finishLoadingData();
 
-                }
-            });
-
-
+                    }
+                });
+            }
         }
     };
 
@@ -277,7 +282,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         inflater.inflate(R.menu.menu_list, menu);
 
         MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
         searchView.setQueryHint(getString(R.string.action_search));
         super.onCreateOptionsMenu(menu, inflater);
@@ -296,6 +301,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
             }
         }
     }
+
 
     @Override
     public void onAttach(Context context) {
@@ -328,6 +334,19 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         errorImage.setImageResource(R.drawable.ic_unknown_error);
     }
 
+    private class FilterTask extends AsyncTask<String, Void, List<Musician>> {
+
+        @Override
+        protected List<Musician> doInBackground(String... params) {
+            return filterMusicians(mMusicians, params[0]);
+        }
+
+        @Override
+        protected void onPostExecute(List<Musician> musicien) {
+            super.onPostExecute(musicien);
+        }
+    }
+
     private List<Musician> filterMusicians(List<Musician> models, String query) {
         query = query.toLowerCase();
 
@@ -339,6 +358,10 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
             }
         }
         return filteredModelList;
+    }
+
+    public SearchView getSearchView() {
+        return searchView;
     }
 
     public interface OnMusicianSelectedListener {

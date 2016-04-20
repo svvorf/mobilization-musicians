@@ -13,9 +13,12 @@ import butterknife.ButterKnife;
 
 /**
  * The activity is used to hold MusicianFragment and is called when a user selects a musician on handsets.
- * The activity has a different toolbar layout (collapsing, contains cover ImageView and title)
+ * The activity has a different toolbar layout relative to MainActivity (collapsing, contains cover ImageView and title)
  */
 public class MusicianActivity extends AppCompatActivity {
+
+    private boolean searchOpened = false;
+    private MusicianFragment musicianFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,7 +28,8 @@ public class MusicianActivity extends AppCompatActivity {
         setSupportActionBar((Toolbar) ButterKnife.findById(this, R.id.toolbar));
 
         int musicianId = getIntent().getIntExtra("id", 0);
-        getSupportFragmentManager().beginTransaction().add(R.id.container, MusicianFragment.newInstance(musicianId), MusicianFragment.class.getSimpleName()).commit();
+        musicianFragment = MusicianFragment.newInstance(musicianId);
+        getSupportFragmentManager().beginTransaction().add(R.id.container, musicianFragment, MusicianFragment.class.getSimpleName()).commit();
     }
 
     @Override

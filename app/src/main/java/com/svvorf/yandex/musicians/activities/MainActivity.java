@@ -2,19 +2,13 @@ package com.svvorf.yandex.musicians.activities;
 
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.MenuItem;
 
 import com.svvorf.yandex.musicians.R;
 import com.svvorf.yandex.musicians.fragments.ListFragment;
 import com.svvorf.yandex.musicians.fragments.MusicianFragment;
-import com.svvorf.yandex.musicians.models.Musician;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -66,6 +60,16 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
 
         getSupportFragmentManager().putFragment(outState, "listFragment", mListFragment);
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Pressing back button closes search
+        if (!getResources().getBoolean(R.bool.is_tablet) && !mListFragment.getSearchView().isIconified()) {
+            mListFragment.getSearchView().setIconified(true);
+        } else {
+            super.onBackPressed();
+        }
     }
 
     @Override
