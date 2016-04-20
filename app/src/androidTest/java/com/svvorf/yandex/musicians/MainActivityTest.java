@@ -3,6 +3,7 @@ package com.svvorf.yandex.musicians;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.support.test.espresso.Espresso;
 import android.support.test.espresso.contrib.RecyclerViewActions;
 import android.support.test.espresso.matcher.BoundedMatcher;
 import android.support.test.rule.ActivityTestRule;
@@ -135,6 +136,14 @@ public class MainActivityTest {
     public void test_listComesBackAfterClosingSearchView() {
         inputSearchQuery(TEST_ITEM_POSITION);
         onView(withContentDescription("Clear query")).perform(click(), click());
+        checkAllRecyclerViewItems();
+    }
+
+    @Test
+    public void test_backButtonClosesSearch() {
+        inputSearchQuery(TEST_ITEM_POSITION);
+        Espresso.pressBack(); // this one for closing a keyboard
+        Espresso.pressBack();
         checkAllRecyclerViewItems();
     }
 
