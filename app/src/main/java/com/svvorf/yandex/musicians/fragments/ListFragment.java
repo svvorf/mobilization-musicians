@@ -234,7 +234,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
         mListAdapter.notifyDataSetChanged();
 
         if (mIsTablet) {
-            mCallback.onMusicianSelected(0);
+            mCallback.loadInitialMusician();
         }
 
     }
@@ -366,5 +366,7 @@ public class ListFragment extends Fragment implements SearchView.OnQueryTextList
 
     public interface OnMusicianSelectedListener {
         void onMusicianSelected(int id);
+
+        void loadInitialMusician();
     }
 }

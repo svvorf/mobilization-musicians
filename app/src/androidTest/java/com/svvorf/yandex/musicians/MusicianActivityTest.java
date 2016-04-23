@@ -3,6 +3,8 @@ package com.svvorf.yandex.musicians;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.matcher.BoundedMatcher;
@@ -32,6 +34,7 @@ import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 
+import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
@@ -48,11 +51,12 @@ public class MusicianActivityTest {
 
     Realm realm;
     int musicianId; //is used while deleting the musician from the database after test
+    private Context targetContext;
 
     @Before
     public void initMusician() {
 
-        RealmConfiguration config = new RealmConfiguration.Builder(InstrumentationRegistry.getInstrumentation()
+        RealmConfiguration config = new RealmConfiguration.Builder(getInstrumentation()
                 .getTargetContext()).name("test.realm").inMemory().build();
         Realm.setDefaultConfiguration(config);
         realm = Realm.getDefaultInstance();
@@ -74,6 +78,13 @@ public class MusicianActivityTest {
         testMusician.setAlbums(10);
 
         realm.commitTransaction();
+
+        targetContext = getInstrumentation().getTargetContext();
+
+        Intent intent = new Intent(targetContext, MusicianActivity.class);
+        intent.putExtra("id", testMusician.getId());
+
+        mActivityRule.launchActivity(intent);
     }
 
 
@@ -84,14 +95,6 @@ public class MusicianActivityTest {
 
     @Test
     public void test_musicianInformationIsProperlyShown() {
-        Context targetContext = InstrumentationRegistry.getInstrumentation()
-                .getTargetContext();
-
-        Intent intent = new Intent(targetContext, MusicianActivity.class);
-        intent.putExtra("id", testMusician.getId());
-
-        mActivityRule.launchActivity(intent);
-
         onView(withId(R.id.collapsing_toolbar)).check(matches(Matchers.withCollapsingToolbarTitle(is(testMusician.getName()))));
         onView(withId(R.id.description)).check(matches(withText(testMusician.getDescription())));
         onView(withId(R.id.statistics)).check(matches(withText(targetContext.getString(R.string.statistics, testMusician.getAlbums(), testMusician.getTracks()))));
@@ -102,6 +105,12 @@ public class MusicianActivityTest {
                 .check(matches(withNthChildsText(is("progressive rock"), 0)))
                 .check(matches(withNthChildsText(is("art rock"), 1)));
     }
+
+    /*@Test
+    public void test_musicianSavedAfterOrientationChange() {
+        rotateScreen();
+        onView(withId(R.id.collapsing_toolbar)).check(matches(Matchers.withCollapsingToolbarTitle(is(testMusician.getName()))));
+    }*/
 
 
     /**
@@ -143,5 +152,16 @@ public class MusicianActivityTest {
                 text.describeTo(description);
             }
         };
+    }
+
+    private void rotateScreen() {
+        int orientation
+                = targetContext.getResources().getConfiguration().orientation;
+
+        Activity activity = mActivityRule.getActivity();
+        activity.setRequestedOrientation(
+                (orientation == Configuration.ORIENTATION_PORTRAIT) ?
+                        ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE :
+                        ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 }

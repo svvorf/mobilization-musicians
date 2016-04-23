@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
 
     // Only on tablets
     private MusicianFragment mMusicianFragment;
+    private boolean musicianFragmentRetained = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
             if (mMusicianFragment == null) {
                 mMusicianFragment = MusicianFragment.newInstance(0);
                 getSupportFragmentManager().beginTransaction().replace(R.id.musician_fragment, mMusicianFragment, MusicianFragment.class.getSimpleName()).commit();
+            } else {
+                musicianFragmentRetained = true;
             }
 
             getSupportFragmentManager().beginTransaction().replace(R.id.list_fragment, mListFragment, ListFragment.class.getSimpleName()).commit();
@@ -83,6 +86,12 @@ public class MainActivity extends AppCompatActivity implements ListFragment.OnMu
 
             overridePendingTransition(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT ? R.anim.enter_from_right : R.anim.enter_from_bottom, R.anim.no_anim);
         }
+    }
+
+    @Override
+    public void loadInitialMusician() {
+        if (!musicianFragmentRetained)
+            mMusicianFragment.setMusician(0);
     }
 
 }

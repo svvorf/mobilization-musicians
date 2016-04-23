@@ -12,4 +12,5 @@
     <string name="unknown_error">Произошла неизвестная ошибка.</string>
     <string name="no_internet">Пожалуйста, проверьте соединение с Интернетом</string>
     <string name="retry">Попробовать снова</string>
+    <string name="big_cover_content_description">Большая обложка</string>
 </resources>
